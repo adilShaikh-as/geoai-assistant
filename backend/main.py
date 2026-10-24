@@ -1,3 +1,4 @@
+import os
 import requests
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -15,7 +16,8 @@ app.add_middleware(
 )
 
 HF_API_URL = "https://api-inference.huggingface.co/models/Qwen/Qwen2.5-1.5B-Instruct"
-HF_TOKEN = "YOUR_TOKEN_HERE" 
+# Securely pull the token you saved in Render's Environment Variables
+HF_TOKEN = os.getenv("HF_TOKEN") 
 
 class QueryRequest(BaseModel):
     question: str
