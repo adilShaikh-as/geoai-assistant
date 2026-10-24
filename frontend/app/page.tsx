@@ -17,7 +17,7 @@ export default function Home() {
     setResult(null);
 
     try {
-      const res = await fetch("https://fruity-stars-warn.loca.lt", {
+      const res = await fetch("https://geoai-assistant.onrender.com", {
         method: "POST",
         headers: { 
           "Content-Type": "application/json",
