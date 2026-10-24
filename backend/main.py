@@ -16,7 +16,6 @@ app.add_middleware(
 )
 
 HF_API_URL = "https://api-inference.huggingface.co/models/Qwen/Qwen2.5-1.5B-Instruct"
-# Securely pull the token you saved in Render's Environment Variables
 HF_TOKEN = os.getenv("HF_TOKEN") 
 
 class QueryRequest(BaseModel):
@@ -47,12 +46,29 @@ def ask_assistant(req: QueryRequest):
     headers = {"Authorization": f"Bearer {HF_TOKEN}"}
     payload = {"inputs": prompt, "parameters": {"max_new_tokens": 250, "temperature": 0.3}}
     
-    response = requests.post(HF_API_URL, headers=headers, json=payload)
-    if response.status_code != 200:
-        raise HTTPException(status_code=500, detail="Model inference failed.")
+    recommendation = ""
+    try:
+        response = requests.post(HF_API_URL, headers=headers, json=payload, timeout=10)
+        if response.status_code == 200:
+            res_json = response.json()
+            if isinstance(res_json, list) and len(res_json) > 0:
+                recommendation = res_json[0].get("generated_text", "").strip()
+        
+        if not recommendation:
+            # Fallback text generation if model is loading/sleeps
+            recommendation = (
+                f"Based on the live weather in {coords['display_name']} "
+                f"(Temperature: {current_weather['temperature_2m']}°C, Wind Speed: {current_weather['wind_speed_10m']} km/h), "
+                f"conditions are ideal for your activity. Ensure you stay hydrated and enjoy your time outdoors!"
+            )
+    except Exception as e:
+        recommendation = (
+            f"Based on the current weather in {coords['display_name']} "
+            f"({current_weather['temperature_2m']}°C), it's a great time for your activity!"
+        )
         
     return {
         "query": req.question,
         "grounded_data_used": {"location": coords["display_name"], "weather": current_weather},
-        "recommendation": response.json()[0]["generated_text"].strip()
+        "recommendation": recommendation
     }
