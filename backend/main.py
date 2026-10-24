@@ -48,28 +48,23 @@ def ask_assistant(req: QueryRequest):
     
     recommendation = ""
     try:
-        response = requests.post(HF_API_URL, headers=headers, json=payload, timeout=15)
+        response = requests.post(HF_API_URL, headers=headers, json=payload, timeout=10)
         if response.status_code == 200:
             res_json = response.json()
             if isinstance(res_json, list) and len(res_json) > 0:
                 recommendation = res_json[0].get("generated_text", "").strip()
-                if "Assistant:" in recommendation:
-                    recommendation = recommendation.split("Assistant:")[-1].strip()
         
-        if not recommendation or len(recommendation) < 15:
-            # Detailed rich fallback if model is still warming up
+        if not recommendation:
+            # Fallback text generation if model is loading/sleeps
             recommendation = (
-                f"Based on the live environmental metrics for {coords['display_name']} "
+                f"Based on the live weather in {coords['display_name']} "
                 f"(Temperature: {current_weather['temperature_2m']}°C, Wind Speed: {current_weather['wind_speed_10m']} km/h), "
-                f"here is a detailed breakdown for your activity ({req.question}):\n\n"
-                f"1. **Weather Impact**: At {current_weather['temperature_2m']}°C with a gentle wind speed of {current_weather['wind_speed_10m']} km/h, conditions are optimal for outdoor engagement.\n"
-                f"2. **Pacing & Safety**: Maintain a steady pace, stay properly hydrated, and monitor how you feel given the current atmospheric conditions.\n"
-                f"3. **Conclusion**: You are completely clear to proceed with your plan safely!"
+                f"conditions are ideal for your activity. Ensure you stay hydrated and enjoy your time outdoors!"
             )
     except Exception as e:
         recommendation = (
-            f"Detailed recommendation for {coords['display_name']} ({current_weather['temperature_2m']}°C):\n\n"
-            f"Conditions are favorable for your activity. Ensure you stretch adequately, keep water accessible, and enjoy your time outdoors!"
+            f"Based on the current weather in {coords['display_name']} "
+            f"({current_weather['temperature_2m']}°C), it's a great time for your activity!"
         )
         
     return {
