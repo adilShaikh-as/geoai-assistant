@@ -17,7 +17,7 @@ export default function Home() {
     setResult(null);
 
     try {
-      const res = await fetch("https://geoai-assistant.onrender.com", {
+      const res = await fetch("https://geoai-assistant.onrender.com/api/ask", {
         method: "POST",
         headers: { 
           "Content-Type": "application/json",
